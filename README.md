@@ -5,7 +5,7 @@ Package asar reads and writes ASAR (Atom-Shell Archive) archives
     import (
         "os"
 
-        "layeh.com/asar"
+        "github.com/denisvmedia/asar"
     )
 
 
