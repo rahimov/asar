@@ -1,4 +1,4 @@
-# asar [![GoDoc](https://godoc.org/layeh.com/asar?status.svg)](https://godoc.org/layeh.com/asar)
+# asar
 
 Package asar reads and writes ASAR (Atom-Shell Archive) archives
 
@@ -26,6 +26,8 @@ Package asar reads and writes ASAR (Atom-Shell Archive) archives
     }
     // print contents of test/file.txt in sample.asar
     fmt.Println(test.String())
+
+Also, please find an example of how to convert zip to asar in the example folder.
 
 ## License
 
