@@ -41,7 +41,7 @@ func (b *Builder) Parent() *Builder {
 }
 
 // Current retrievs current Entry.
-func (b *Builder) Current(current *Entry, flags Flag) *Entry {
+func (b *Builder) Current() *Entry {
 	return b.current
 }
 
