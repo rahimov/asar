@@ -40,6 +40,11 @@ func (b *Builder) Parent() *Builder {
 	return b
 }
 
+// Current retrievs current Entry.
+func (b *Builder) Current(current *Entry, flags Flag) *Entry {
+	return b.current
+}
+
 // AddString adds a new file Entry whose contents are the given string.
 func (b *Builder) AddString(name, contents string, flags Flag) *Builder {
 	return b.Add(name, strings.NewReader(contents), int64(len(contents)), flags)
@@ -75,6 +80,14 @@ func (b *Builder) AddDir(name string, flags Flag) *Builder {
 
 	b.current.Children = append(b.current.Children, child)
 	b.current = child
+
+	return b
+}
+
+// SetCurrent changes directory to Entry. The active Entry is switched to this newly
+// added Entry.
+func (b *Builder) SetCurrent(current *Entry, flags Flag) *Builder {
+	b.current = current
 
 	return b
 }
