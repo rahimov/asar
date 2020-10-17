@@ -86,7 +86,7 @@ func (b *Builder) AddDir(name string, flags Flag) *Builder {
 
 // SetCurrent changes directory to Entry. The active Entry is switched to this newly
 // added Entry.
-func (b *Builder) SetCurrent(current *Entry, flags Flag) *Builder {
+func (b *Builder) SetCurrent(current *Entry) *Builder {
 	b.current = current
 
 	return b
