@@ -1,4 +1,4 @@
-package main // import "github.com/jaygooby/asar"
+package main // import "github.com/denisvmedia/asar"
 
 import (
 	"flag"
@@ -6,7 +6,7 @@ import (
 	"os"
 	"io/ioutil"
 	"path/filepath"
-	"github.com/jaygooby/asar"
+	"github.com/denisvmedia/asar"
 )
 
 func main() {

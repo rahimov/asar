@@ -1,4 +1,4 @@
-package asar // import "github.com/jaygooby/asar"
+package asar // import "github.com/denisvmedia/asar"
 
 import (
 	"encoding/binary"

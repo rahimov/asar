@@ -1,9 +1,10 @@
-package asar // import "github.com/jaygooby/asar"
+package asar
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
+
+	"github.com/go-extras/errors"
 )
 
 var (
@@ -65,7 +66,7 @@ func (j *jsonReader) NextDelimRune() rune {
 	tkn := j.Next()
 	r, ok := tkn.(json.Delim)
 	if !ok {
-		panic(errHeader)
+		panic(errors.Wrapf(errHeader, "NextDelimRune: %v", tkn))
 	}
 	return rune(r)
 }
@@ -73,7 +74,7 @@ func (j *jsonReader) NextDelimRune() rune {
 func (j *jsonReader) ExpectDelim(r rune) {
 	next := j.NextDelimRune()
 	if next != r {
-		panic(errHeader)
+		panic(errors.Wrapf(errHeader, "ExpectDelim"))
 	}
 }
 
@@ -81,7 +82,7 @@ func (j *jsonReader) ExpectBool() bool {
 	tkn := j.Next()
 	b, ok := tkn.(bool)
 	if !ok {
-		panic(errHeader)
+		panic(errors.Wrapf(errHeader, "ExpectBool: %v", tkn))
 	}
 	return b
 }
@@ -90,7 +91,7 @@ func (j *jsonReader) ExpectString() string {
 	next := j.Next()
 	str, ok := next.(string)
 	if !ok {
-		panic(errHeader)
+		panic(errors.Wrapf(errHeader, "ExpectString: %s", next))
 	}
 	return str
 }
@@ -98,7 +99,7 @@ func (j *jsonReader) ExpectString() string {
 func (j *jsonReader) ExpectStringVal(val string) {
 	str := j.ExpectString()
 	if str != val {
-		panic(errHeader)
+		panic(errors.Wrapf(errHeader, "ExpectStringVal"))
 	}
 }
 
@@ -114,7 +115,7 @@ func (j *jsonReader) ExpectInt64() int64 {
 	}
 	val, err := number.Int64()
 	if err != nil {
-		panic(errHeader)
+		panic(errors.Wrapf(errHeader, "ExpectInt64: %v", number))
 	}
 	return val
 }
@@ -128,8 +129,9 @@ func parseRoot(r *jsonReader) *Entry {
 	r.ExpectStringVal("files")
 	parseFiles(r, entry)
 	r.ExpectDelim('}')
-	if r.Next() != nil {
-		panic(errHeader)
+	next := r.Next()
+	if next != nil {
+		panic(errors.Wrapf(errHeader, "parseRoot: next == %v", next))
 	}
 	return entry
 }
@@ -145,10 +147,10 @@ func parseFiles(r *jsonReader, parent *Entry) {
 func parseEntry(r *jsonReader, parent *Entry) {
 	name := r.ExpectString()
 	if name == "" {
-		panic(errHeader)
+		panic(errors.Wrapf(errHeader, "parseEntry: empty name"))
 	}
 	if !validFilename(name) {
-		panic(errHeader)
+		panic(errors.Wrapf(errHeader, "parseEntry: !validFilename(%s)", name))
 	}
 
 	r.ExpectDelim('{')
@@ -176,7 +178,7 @@ func parseEntry(r *jsonReader, parent *Entry) {
 				child.Flags |= FlagExecutable
 			}
 		default:
-			panic(errHeader)
+			panic(errors.Wrapf(errHeader, "parseEntry: ExpectString: %v", r.ExpectString()))
 		}
 	}
 

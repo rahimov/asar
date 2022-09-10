@@ -3,15 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/denisvmedia/asar"
-	"github.com/krolaw/zipstream"
 	"io"
-	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
-	"sort"
 	"strings"
+
+	"github.com/krolaw/zipstream"
+
+	"github.com/denisvmedia/asar"
 )
 
 // This example shows how to convert .zip to .asar
@@ -44,49 +43,47 @@ func main() {
 			}
 			break
 		}
-		fmt.Println(*fl)
-		s2, err := ioutil.ReadAll(zr)
+		if fl.FileInfo().IsDir() {
+			fmt.Println("Dir entry (skipped):", *fl)
+			continue
+		}
+
+		fmt.Println("File entry:", *fl)
+		s2, err := io.ReadAll(zr)
+		if err != nil {
+			panic(err)
+		}
 
 		dirs := make([]string, 0)
-		dir, _ := path.Split(fl.Name)
-		dir = strings.TrimRight(dir, "/")
-		fmt.Println(fl.Name)
-		for {
-			if dir == "" || dir == "./" || dir == "." {
-				break
-			}
+		components := strings.Split(fl.Name, "/")
+		for _, dir := range components[:len(components)-1] {
 			dirs = append(dirs, dir)
-			dir, _ = path.Split(dir)
-			dir = strings.TrimRight(dir, "/")
 		}
-		sort.Sort(sort.Reverse(sort.StringSlice(dirs)))
 
 		var actualDir string
 		for _, dir := range dirs {
 			if actualDir == "" {
 				actualDir = dir
+			} else {
+				actualDir = actualDir + "/" + dir
 			}
 
 			if entry, ok := dirEntries[actualDir]; !ok {
-				fmt.Println("adding actual dir", actualDir)
+				fmt.Println("Adding dir:", actualDir)
 				entries.AddDir(dir, asar.FlagDir)
 				dirEntries[actualDir] = entries.Current()
 			} else {
-				fmt.Println("changing to dir", actualDir)
+				fmt.Println("Changing to dir:", actualDir)
 				entries.SetCurrent(entry)
 			}
-
-			actualDir = actualDir + "/" + dir
 		}
 
-		if fl.FileInfo().IsDir() {
-			// entries.AddDir(fl.FileInfo().Name(), asar.FlagDir)
-		} else {
-			entries.Add(fl.FileInfo().Name(), bytes.NewReader(s2), int64(len(s2)), asar.FlagNone)
-		}
+		fname := fl.FileInfo().Name()
+		fmt.Println("Adding file:", fname)
+		entries.Add(fname, bytes.NewReader(s2), int64(len(s2)), asar.FlagNone)
 	}
 
-	f2, err := os.Create(fileName[:len(fileName) - len(filepath.Ext(fileName))]+".asar")
+	f2, err := os.Create(fileName[:len(fileName)-len(filepath.Ext(fileName))] + ".asar")
 	if err != nil {
 		panic(err)
 	}

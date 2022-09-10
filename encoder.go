@@ -1,4 +1,4 @@
-package asar // import "github.com/jaygooby/asar"
+package asar
 
 import (
 	"bytes"
@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"io"
 	"strconv"
+
+	"github.com/go-extras/errors"
+	_ "github.com/go-extras/errors"
 )
 
 type entryEncoder struct {
@@ -29,7 +32,7 @@ func (enc *entryEncoder) WriteField(key string, v interface{}) {
 func (enc *entryEncoder) Encode(e *Entry) error {
 	enc.Header.WriteByte('{')
 	if e.Flags&FlagDir != 0 {
-		if e.Flags& FlagUnpacked !=0{
+		if e.Flags&FlagUnpacked != 0 {
 			enc.WriteField("unpacked", true)
 			enc.Header.WriteByte(',')
 		}
@@ -40,12 +43,12 @@ func (enc *entryEncoder) Encode(e *Entry) error {
 				enc.Header.WriteByte(',')
 			}
 			if !validFilename(child.Name) {
-				panic(errHeader)
+				panic(errors.Wrapf(errHeader, "!validFileName(%s)", child.Name))
 			}
 			enc.Write(child.Name)
 			enc.Header.WriteByte(':')
 			if err := enc.Encode(child); err != nil {
-				return err
+				return errors.Wrap(err, "Failed to encode")
 			}
 		}
 		enc.Header.WriteByte('}')
@@ -63,7 +66,7 @@ func (enc *entryEncoder) Encode(e *Entry) error {
 		if e.Flags&FlagUnpacked == 0 {
 			enc.WriteField("offset", strconv.FormatInt(enc.CurrentOffset, 10))
 			enc.CurrentOffset += e.Size
-			enc.Contents = append(enc.Contents, io.NewSectionReader(e.r, e.Offset + e.baseOffset, e.Size))
+			enc.Contents = append(enc.Contents, io.NewSectionReader(e.r, e.Offset+e.baseOffset, e.Size))
 		} else {
 			enc.WriteField("unpacked", true)
 		}
@@ -73,13 +76,13 @@ func (enc *entryEncoder) Encode(e *Entry) error {
 }
 
 // EncodeTo writes an ASAR archive containing Entry's descendants. This function
-// is usally called on the root entry.
+// is usually called on the root entry.
 func (e *Entry) EncodeTo(w io.Writer) (n int64, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
 			if e := r.(error); e != nil {
-				err = e
+				err = errors.Wrap(e, "from panic")
 			} else {
 				panic(r)
 			}
@@ -94,14 +97,14 @@ func (e *Entry) EncodeTo(w io.Writer) (n int64, err error) {
 	}
 	encoder.Encoder = json.NewEncoder(&encoder.Header)
 	if err = encoder.Encode(e); err != nil {
-		return
+		return 0, errors.Wrap(err, "failed to encode")
 	}
 
-	length:= encoder.Header.Len() - 16
+	length := encoder.Header.Len() - 16
 	var newLen int
 	{
 		var padding [3]byte
-		if mod := length%4; mod != 0 {
+		if mod := length % 4; mod != 0 {
 			encoder.Header.Write(padding[:4-mod])
 		}
 		newLen = encoder.Header.Len() - 16
@@ -115,7 +118,7 @@ func (e *Entry) EncodeTo(w io.Writer) (n int64, err error) {
 
 	n, err = encoder.Header.WriteTo(w)
 	if err != nil {
-		return
+		return n, errors.Wrap(err, "failed to Header.WriteTo")
 	}
 
 	for _, chunk := range encoder.Contents {
@@ -123,9 +126,9 @@ func (e *Entry) EncodeTo(w io.Writer) (n int64, err error) {
 		written, err = io.Copy(w, chunk)
 		n += written
 		if err != nil {
-			return
+			return n, errors.Wrap(err, "failed to io.Copy")
 		}
 	}
 
-	return
+	return n, nil
 }

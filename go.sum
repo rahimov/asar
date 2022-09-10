@@ -1,0 +1,4 @@
+github.com/go-extras/errors v0.11.0 h1:6GQ3NlaG2JpoxQ3pzOt9DIXbnAKW98o8F632DRIQ5gM=
+github.com/go-extras/errors v0.11.0/go.mod h1:TcjVY2KFRNtXLWdV2GKnO2/lg8sZSsQ653IPTFUj368=
+github.com/krolaw/zipstream v0.0.0-20180621105154-0a2661891f94 h1:+AIlO01SKT9sfWU5CLWi0cfHc7dQwgGz3FhFRzXLoMg=
+github.com/krolaw/zipstream v0.0.0-20180621105154-0a2661891f94/go.mod h1:TcE3PIIkVWbP/HjhRAafgCjRKvDOi086iqp9VkNX/ng=
