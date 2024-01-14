@@ -1,4 +1,4 @@
-package asar // import "github.com/denisvmedia/asar"
+package asar // import "github.com/rahimov/asar"
 
 import (
 	"io"
@@ -47,18 +47,20 @@ func (b *Builder) Current() *Entry {
 
 // AddString adds a new file Entry whose contents are the given string.
 func (b *Builder) AddString(name, contents string, flags Flag) *Builder {
-	return b.Add(name, strings.NewReader(contents), int64(len(contents)), flags)
+	return b.Add(name, strings.NewReader(contents), int64(len(contents)), flags, "", nil)
 }
 
 // Add adds a new file Entry.
-func (b *Builder) Add(name string, ra io.ReaderAt, size int64, flags Flag) *Builder {
+func (b *Builder) Add(name string, ra io.ReaderAt, size int64, flags Flag, link string, integrity *Integrity) *Builder {
 	b.init()
 
 	child := &Entry{
-		Name:   name,
-		Size:   size,
-		Flags:  flags,
-		Parent: b.current,
+		Name:      name,
+		Size:      size,
+		Flags:     flags,
+		Link:      link,
+		Integrity: integrity,
+		Parent:    b.current,
 
 		r: ra,
 	}

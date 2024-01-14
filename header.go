@@ -144,6 +144,40 @@ func parseFiles(r *jsonReader, parent *Entry) {
 	r.ExpectDelim('}')
 }
 
+func parseArray(r *jsonReader) []string {
+	out := make([]string, 0)
+	r.ExpectDelim('[')
+	for !r.HasDelimRune(']') {
+		out = append(out, r.ExpectString())
+	}
+	r.ExpectDelim(']')
+
+	return out
+}
+
+func parseIntegrity(r *jsonReader, parent *Entry) {
+	r.ExpectDelim('{')
+	integrity := &Integrity{}
+
+	for !r.HasDelimRune('}') {
+		cs := r.ExpectString()
+		switch cs {
+		case "algorithm":
+			integrity.Algorithm = r.ExpectString()
+		case "hash":
+			integrity.Hash = r.ExpectString()
+		case "blockSize":
+			integrity.BlockSize = r.ExpectInt64()
+		case "blocks":
+			integrity.Blocks = parseArray(r)
+		default:
+			panic(errors.Wrapf(errHeader, "parseIntegrity: ExpectString: %v", r.ExpectString()))
+		}
+	}
+	r.ExpectDelim('}')
+	parent.Integrity = integrity
+}
+
 func parseEntry(r *jsonReader, parent *Entry) {
 	name := r.ExpectString()
 	if name == "" {
@@ -177,6 +211,10 @@ func parseEntry(r *jsonReader, parent *Entry) {
 			if r.ExpectBool() {
 				child.Flags |= FlagExecutable
 			}
+		case "link":
+			child.Link = r.ExpectString()
+		case "integrity":
+			parseIntegrity(r, child)
 		default:
 			panic(errors.Wrapf(errHeader, "parseEntry: ExpectString: %v", r.ExpectString()))
 		}
