@@ -10,7 +10,7 @@ import (
 
 	"github.com/krolaw/zipstream"
 
-	"github.com/denisvmedia/asar"
+	"github.com/rahimov/asar"
 )
 
 // This example shows how to convert .zip to .asar
@@ -80,7 +80,7 @@ func main() {
 
 		fname := fl.FileInfo().Name()
 		fmt.Println("Adding file:", fname)
-		entries.Add(fname, bytes.NewReader(s2), int64(len(s2)), asar.FlagNone)
+		entries.Add(fname, bytes.NewReader(s2), int64(len(s2)), asar.FlagNone, "", nil)
 	}
 
 	f2, err := os.Create(fileName[:len(fileName)-len(filepath.Ext(fileName))] + ".asar")

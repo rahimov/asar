@@ -1,6 +1,6 @@
-module github.com/denisvmedia/asar
+module github.com/rahimov/asar
 
-go 1.19
+go 1.21
 
 require (
 	github.com/go-extras/errors v0.11.0

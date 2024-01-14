@@ -1,4 +1,4 @@
-package asar // import "github.com/denisvmedia/asar"
+package asar // import "github.com/rahimov/asar"
 
 import (
 	"errors"
@@ -23,28 +23,40 @@ const (
 	// FlagUnpacked denotes that the entry's contents are not included in
 	// the archive.
 	FlagUnpacked
+	FlagLink
 )
+
+// Integrity is a checksum of file.
+type Integrity struct {
+	Algorithm string
+	Hash      string
+	BlockSize int64
+	Blocks    []string
+}
 
 // Entry is a file or a folder in an ASAR archive.
 type Entry struct {
-	Name     string
-	Size     int64
-	Offset   int64
-	Flags    Flag
-	Parent   *Entry
-	Children []*Entry
+	Name      string
+	Size      int64
+	Offset    int64
+	Flags     Flag
+	Parent    *Entry
+	Children  []*Entry
+	Link      string
+	Integrity *Integrity
 
 	r          io.ReaderAt
 	baseOffset int64
 }
 
 // New creates a new Entry.
-func New(name string, ra io.ReaderAt, size, offset int64, flags Flag) *Entry {
+func New(name string, ra io.ReaderAt, size, offset int64, flags Flag, link string) *Entry {
 	return &Entry{
 		Name:   name,
 		Size:   size,
 		Offset: offset,
 		Flags:  flags,
+		Link:   link,
 
 		r: ra,
 	}
@@ -94,13 +106,15 @@ func (f fileInfo) Sys() interface{} {
 // Path returns the file path to the entry.
 //
 // For example, given the following tree structure:
-//  root
-//   - sub1
-//   - sub2
-//     - file2.jpg
+//
+//	root
+//	 - sub1
+//	 - sub2
+//	   - file2.jpg
 //
 // file2.jpg's path would be:
-//  sub2/file2.jpg
+//
+//	sub2/file2.jpg
 func (e *Entry) Path() string {
 	if e.Parent == nil {
 		return ""
@@ -169,14 +183,16 @@ func (e *Entry) String() string {
 // requested sub-entry cannot be found.
 //
 // For example, given the following tree structure:
-//  root
-//   - sub1
-//   - sub2
-//     - sub2.1
-//       - file2.jpg
+//
+//	root
+//	 - sub1
+//	 - sub2
+//	   - sub2.1
+//	     - file2.jpg
 //
 // The following expression would return the .jpg *Entry:
-//  root.Find("sub2", "sub2.1", "file2.jpg")
+//
+//	root.Find("sub2", "sub2.1", "file2.jpg")
 func (e *Entry) Find(path ...string) *Entry {
 pathLoop:
 	for _, name := range path {
